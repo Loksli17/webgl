@@ -160,6 +160,7 @@ const makeShader = (gl: WebGLRenderingContext, source: string, type: number): We
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
     {
         console.error(`Shader wasn't compile ${gl.getShaderInfoLog(shader)}`);
+        gl.deleteShader(shader);
         return null;
     }
 
@@ -188,6 +189,7 @@ const makeShaderProgram = (gl: WebGLRenderingContext, vShader: WebGLShader, fSha
     if (!gl.getProgramParameter(program, gl.LINK_STATUS))
     {
         console.error(`Shader program has not been inited`);
+        gl.deleteProgram(program);
         return null;
     }
 
@@ -216,21 +218,7 @@ const render = (scene: IScene, gl: WebGLRenderingContext) =>
 {
     if (!gl) return;
 
-    const sceneColor = scene.getColor();
 
-    
-    gl.clearColor(sceneColor.r, sceneColor.g, sceneColor.b, sceneColor.a);
-
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-
-    nodeRenderTest(gl);
-}
-
-
-const nodeRenderTest = (gl: WebGLRenderingContext) => 
-{
     const vertexes = 
     [
         -0.5, -0.5, 0,
@@ -238,6 +226,39 @@ const nodeRenderTest = (gl: WebGLRenderingContext) =>
             0, 0.5, 0 
     ];
 
+    const vertexShader   = makeShader(gl, simpleVertexShaderSource, gl.VERTEX_SHADER);
+    const fragmentShader = makeShader(gl, fragmentShaderSource,     gl.FRAGMENT_SHADER);
+
+    if (!vertexShader || !fragmentShader) return;
+
+    const program = makeShaderProgram(gl, vertexShader, fragmentShader);
+
+    if (!program) return;
+
+
+    const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
+
+    const vertexBuffer = gl.createBuffer();
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexes), gl.STATIC_DRAW);
+
+
+
+    const sceneColor = scene.getColor();
+
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.clearColor(sceneColor.r, sceneColor.g, sceneColor.b, sceneColor.a);
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(program);
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
 
@@ -256,12 +277,7 @@ const main = () =>
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
 
-    initTriangleProgram(gl);
-
-    requestAnimationFrame(() => 
-    {
-        render(scene, gl);
-    });
+    render(scene, gl);
 }
 
 
