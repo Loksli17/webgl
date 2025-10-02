@@ -106,7 +106,7 @@ class Engine
 
 
 
-const fragmentShader = 
+const fragmentShaderSource: string = 
 `
     void main(void)
     {
@@ -115,7 +115,7 @@ const fragmentShader =
 `;
 
 
-const vertexShader = 
+const vertexShaderSource: string = 
 `
     attribute vec3 aVertexPosition;
 
@@ -125,6 +125,17 @@ const vertexShader =
     void main(void)
     {
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    }
+`;
+
+
+const simpleVertexShaderSource: string = 
+`
+    attribute vec3 aPos;
+    
+    void main()
+    {
+        gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
     }
 `;
 
@@ -148,7 +159,7 @@ const makeShader = (gl: WebGLRenderingContext, source: string, type: number): We
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
     {
-        console.warn(`Fragment shader wasn't compile ${gl.getShaderInfoLog(shader)}`);
+        console.error(`Shader wasn't compile ${gl.getShaderInfoLog(shader)}`);
         return null;
     }
 
@@ -159,11 +170,11 @@ const makeShader = (gl: WebGLRenderingContext, source: string, type: number): We
 /**
  * 
  * @param gl 
- * @param fShader 
  * @param vShader 
+ * @param fShader 
  * @returns 
  */
-const makeShaderProgram = (gl: WebGLRenderingContext, fShader: WebGLShader, vShader: WebGLShader): WebGLProgram | null => 
+const makeShaderProgram = (gl: WebGLRenderingContext, vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null => 
 {
     const program: WebGLProgram = gl.createProgram();
     
@@ -172,13 +183,31 @@ const makeShaderProgram = (gl: WebGLRenderingContext, fShader: WebGLShader, vSha
 
     gl.linkProgram(program);
 
+    // todo delete shaders
+
     if (!gl.getProgramParameter(program, gl.LINK_STATUS))
     {
-        console.warn(`Shader program has not been inited`);
+        console.error(`Shader program has not been inited`);
         return null;
     }
 
     return program;
+}
+
+
+const initTriangleProgram = (gl: WebGLRenderingContext): void =>
+{
+    const vertexShader   = makeShader(gl, simpleVertexShaderSource, gl.VERTEX_SHADER);
+    const fragmentShader = makeShader(gl, fragmentShaderSource,     gl.FRAGMENT_SHADER);
+
+    if (!vertexShader || !fragmentShader) return;
+
+    const program = makeShaderProgram(gl, vertexShader, fragmentShader);
+
+    if (program) gl.useProgram(program);
+
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
 }
 
 
@@ -189,13 +218,27 @@ const render = (scene: IScene, gl: WebGLRenderingContext) =>
 
     const sceneColor = scene.getColor();
 
+    
     gl.clearColor(sceneColor.r, sceneColor.g, sceneColor.b, sceneColor.a);
 
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
+    nodeRenderTest(gl);
 }
 
+
+const nodeRenderTest = (gl: WebGLRenderingContext) => 
+{
+    const vertexes = 
+    [
+        -0.5, -0.5, 0,
+         0.5, -0.5, 0,
+            0, 0.5, 0 
+    ];
+
+}
 
 
 
@@ -204,12 +247,20 @@ const main = () =>
     const canvas = document.querySelector('#canvas-gl') as HTMLCanvasElement;
     const gl     = canvas.getContext('webgl');
 
+    if (!gl)
+    {
+        console.error('errors with gl');
+        return;
+    }
+
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
 
+    initTriangleProgram(gl);
+
     requestAnimationFrame(() => 
     {
-        if (gl) render(scene, gl);
+        render(scene, gl);
     });
 }
 
