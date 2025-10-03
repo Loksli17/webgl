@@ -197,68 +197,81 @@ const makeShaderProgram = (gl: WebGLRenderingContext, vShader: WebGLShader, fSha
 }
 
 
-const initTriangleProgram = (gl: WebGLRenderingContext): void =>
+
+interface IShaderProgramDTO
 {
-    const vertexShader   = makeShader(gl, simpleVertexShaderSource, gl.VERTEX_SHADER);
-    const fragmentShader = makeShader(gl, fragmentShaderSource,     gl.FRAGMENT_SHADER);
+    name         : string;
+    vShaderSource: string;
+    fShaderSource: string;
+}
 
-    if (!vertexShader || !fragmentShader) return;
 
-    const program = makeShaderProgram(gl, vertexShader, fragmentShader);
+const makeShaderPrograms = (gl: WebGLRenderingContext, programsDTO: IShaderProgramDTO[]) => 
+{
+    const programs: WebGLProgram[] = [];
+    
+    for (let i = 0; i < programsDTO.length; i++)
+    {
+        const vertexShader   = makeShader(gl, programsDTO[i].vShaderSource, gl.VERTEX_SHADER);
+        const fragmentShader = makeShader(gl, programsDTO[i].fShaderSource, gl.FRAGMENT_SHADER);
 
-    if (program) gl.useProgram(program);
+        if (!vertexShader)
+        {
+            console.error(`Error with vertex shader of program with name ${programsDTO[i].name}`);
+            return [];
+        }
 
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
+        if (!fragmentShader)
+        {
+            console.error(`Error with fragment shader of program with name ${programsDTO[i].name}`);
+            return [];
+        }
+
+        const program = makeShaderProgram(gl, vertexShader, fragmentShader);
+
+        if (!program) return [];
+
+        gl.useProgram(program);
+
+        gl.deleteShader(vertexShader);
+        gl.deleteShader(fragmentShader);
+
+        programs.push(program);
+    }
+
+    return programs;
 }
 
 
 
-const render = (scene: IScene, gl: WebGLRenderingContext) => 
+const renderScene = (scene: IScene, gl: WebGLRenderingContext) => 
 {
-    if (!gl) return;
-
-
-    const vertexes = 
-    [
-        -0.5, -0.5, 0,
-         0.5, -0.5, 0,
-            0, 0.5, 0 
-    ];
-
-    const vertexShader   = makeShader(gl, simpleVertexShaderSource, gl.VERTEX_SHADER);
-    const fragmentShader = makeShader(gl, fragmentShaderSource,     gl.FRAGMENT_SHADER);
-
-    if (!vertexShader || !fragmentShader) return;
-
-    const program = makeShaderProgram(gl, vertexShader, fragmentShader);
-
-    if (!program) return;
-
-
-    const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
-
-    const vertexBuffer = gl.createBuffer();
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexes), gl.STATIC_DRAW);
-
-
-
     const sceneColor = scene.getColor();
-
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(sceneColor.r, sceneColor.g, sceneColor.b, sceneColor.a);
-
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+}
 
-    gl.useProgram(program);
-    gl.enableVertexAttribArray(positionAttributeLocation);
-    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+
+const render = (
+    scene    : IScene, 
+    gl       : WebGLRenderingContext, 
+    programs : WebGLProgram[], 
+    renderers: ((gl: WebGLRenderingContext, program: WebGLProgram, nodes: INode[]) => void)[]
+) => 
+{
+    if (!gl) return;
+
+    renderScene(scene, gl);
+
+    for (let i = 0; i < programs.length; i++)
+    {
+        renderers[i](gl, programs[i], []);
+    }
 }
 
 
@@ -277,7 +290,46 @@ const main = () =>
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
 
-    render(scene, gl);
+
+    const programsDTO: IShaderProgramDTO[] = 
+    [
+        {
+            name         : 'Graphics', 
+            vShaderSource: simpleVertexShaderSource, 
+            fShaderSource: fragmentShaderSource,
+        },
+    ];
+
+
+    const renderers = 
+    [
+        (gl: WebGLRenderingContext, program: WebGLProgram, nodes: INode[]) => 
+        {
+            const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
+            const vertexBuffer              = gl.createBuffer();
+
+            //todo vertexBuffer to func
+
+            const geometry = 
+            [
+                -0.5, -0.5, 0,
+                0.5, -0.5, 0,
+                    0, 0.5, 0 
+            ];
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry), gl.STATIC_DRAW);
+
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+            
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+        },
+    ];
+    
+    const programs = makeShaderPrograms(gl, programsDTO);
+
+    render(scene, gl, programs, renderers);
 }
 
 
