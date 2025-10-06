@@ -1,129 +1,11 @@
+import Engine from './core/Engine';
+import type INode from './core/Node/INode';
+import Node from './core/Node/Node';
+import type IScene from './core/Scene/IScene';
+import Scene from './core/Scene/Scene';
+import Matrix3x3 from './math/Matrix3x3';
+import Vec2 from './math/Vector2';
 import './style.css'
-
-
-interface IRGBAColor
-{
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-}
-
-
-class Matrix3x3
-{
-    elements: number[] = 
-    [
-        1, 0, 0,
-        0, 1, 0,
-        0, 0, 1,
-    ];
-
-
-    constructor(elements?: number[])
-    {
-        if (elements) this.elements = elements.slice();
-    }
-}
-
-
-
-interface INode
-{
-    geometry   : number[];
-    localMatrix: Matrix3x3; 
-}
-
-
-interface IScene
-{
-    setColor(color: IRGBAColor): void;
-    getColor()                 : IRGBAColor;
-
-    insertNode(node: INode): boolean;
-    removeNode(node: INode): boolean;
-
-    getRenderNodes(): INode[];
-}
-
-
-
-class Scene implements IScene
-{
-
-    private color: IRGBAColor = { r: 0, g: 0, b: 0, a: 1 };
-    private nodes: INode[]    = [];
-
-    public setColor(color: IRGBAColor): void 
-    {
-        this.color = color
-    }
-
-
-    public getColor(): IRGBAColor 
-    {
-        return this.color;
-    }
-
-    
-    public insertNode(node: INode): boolean 
-    {
-        this.nodes.push(node);
-        return true;
-    }
-    
-
-    public removeNode(node: INode): boolean 
-    {
-       const index = this.nodes.indexOf(node);
-       const res   = this.nodes.splice(index, 1);
-
-       if (res.length) return true;
-
-       return false;
-    }
-
-
-    public getRenderNodes(): INode[] 
-    {
-        return this.nodes;    
-    }
-
-}
-
-
-
-
-class Engine
-{
-
-    private static instance: Engine;
-
-    private scenes          : IScene[] = [];
-    private activeSceneIndex: number   = 0;
-    
-
-    private constructor() { };
-
-
-    public static Instance(): Engine
-    {
-        return this.instance || (this.instance = new this()); 
-    }
-
-
-    public insertScene(scene: IScene)
-    {
-        this.scenes.push(scene);
-    }
-
-
-    public getActiveScene(): IScene | null
-    {
-        return this.scenes[this.activeSceneIndex] || null;
-    }
-
-}
 
 
 
@@ -279,7 +161,7 @@ const render = (
 
     for (let i = 0; i < programs.length; i++)
     {
-        renderers[i](gl, programs[i], scene.getRenderNodes());
+        renderers[i](gl, programs[i], scene.getViewportNodes());
     }
 }
 
@@ -298,24 +180,9 @@ const main = () =>
 
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
+
+    scene.insertNode(new Node(new Vec2(100, 200)));
     
-    scene.insertNode(
-        {
-            geometry:
-            [
-                50,  50,
-                100, 50,
-                50, 100,
-                50, 100,
-                100, 50,
-                100, 100,
-            ],
-
-            localMatrix: new Matrix3x3(),
-        },
-
-    );
-
     const programsDTO: IShaderProgramDTO[] = 
     [
         {
@@ -347,7 +214,7 @@ const main = () =>
             const vertexBuffer              = gl.createBuffer();
 
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nodes[0].geometry), gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nodes[0].getGeometry()), gl.STATIC_DRAW);
 
             gl.enableVertexAttribArray(positionAttributeLocation);
             gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
@@ -358,9 +225,9 @@ const main = () =>
             
             gl.uniformMatrix3fv(projectionMatrixUniform, false, projectionMatrix.elements);
             gl.uniformMatrix3fv(cameraMatrixUniform,     false, cameraMatrix.elements);
-            gl.uniformMatrix3fv(localMatrixUniform,      false, nodes[0].localMatrix.elements);
+            gl.uniformMatrix3fv(localMatrixUniform,      false, nodes[0].getLocalMatrix().elements);
             
-            gl.drawArrays(gl.TRIANGLES, 0, nodes[0].geometry.length / 2);
+            gl.drawArrays(gl.TRIANGLES, 0, nodes[0].getGeometry().length / 2);
         },
     ];
     
