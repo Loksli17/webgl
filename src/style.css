@@ -1,0 +1,16 @@
+* 
+{
+    margin : 0;
+    padding: 0;
+}
+
+.app
+{
+    display: grid;
+    grid-template-columns: 1500px auto;
+}
+
+.actions-div 
+{
+    padding: 25px 30px;
+}
