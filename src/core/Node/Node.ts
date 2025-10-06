@@ -13,11 +13,17 @@ export default class Node implements INode
     private size: Vec2;
 
     
-    constructor(size: Vec2)
+    constructor(
+        size: Vec2, 
+        pos : Vec2 = new Vec2(0, 0)
+    )
     {
         this.size        = new Vec2(size.x, size.y);
         this.localMatrix = new Matrix3x3();
         this.geometry    = [0, 0, 0, 0, 0, 0];
+
+        this.localMatrix.elements[6] = pos.x;
+        this.localMatrix.elements[7] = pos.y;
 
         this.boundingBox = [
             new Vec2(0, 0), 

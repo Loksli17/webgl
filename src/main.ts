@@ -181,7 +181,7 @@ const main = () =>
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
 
-    scene.insertNode(new Node(new Vec2(100, 200)));
+    scene.insertNode(new Node(new Vec2(228, 322), new Vec2(100, 100)));
     
     const programsDTO: IShaderProgramDTO[] = 
     [
