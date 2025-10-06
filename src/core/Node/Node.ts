@@ -74,20 +74,22 @@ export default class Node implements INode
 
     public updateGeometry(bb: Vec2[]): this 
     {        
+        //todo calc without position
+        
         this.geometry[0] = bb[0].x;
         this.geometry[1] = bb[0].y;
 
         this.geometry[2] = bb[1].x;
         this.geometry[3] = bb[1].y;
 
-        this.geometry[4] = bb[2].x;
-        this.geometry[5] = bb[2].y;
+        this.geometry[4] = bb[3].x;
+        this.geometry[5] = bb[3].y;
 
-        this.geometry[6] = bb[0].x;
-        this.geometry[7] = bb[0].y;
+        this.geometry[6] = bb[3].x;
+        this.geometry[7] = bb[3].y;
         
-        this.geometry[8] = bb[3].x;
-        this.geometry[9] = bb[3].y;
+        this.geometry[8] = bb[1].x;
+        this.geometry[9] = bb[1].y;
 
         this.geometry[10] = bb[2].x;
         this.geometry[11] = bb[2].y;

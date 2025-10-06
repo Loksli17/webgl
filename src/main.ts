@@ -181,8 +181,15 @@ const main = () =>
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
 
-    scene.insertNode(new Node(new Vec2(228, 322), new Vec2(100, 100)));
-    
+    // scene.insertNode(new Node(new Vec2(250, 250), new Vec2(50, 50)));
+    // scene.insertNode(new Node(new Vec2(100, 400), new Vec2(1000, 100)));
+    // scene.insertNode(new Node(new Vec2(100, 100), new Vec2(100, 650)));
+    // scene.insertNode(new Node(new Vec2(100, 100), new Vec2(120, 750)));
+    // scene.insertNode(new Node(new Vec2(100, 100), new Vec2(100, 200)));
+    scene.insertNode(new Node(new Vec2(100, 100), new Vec2(100, 100)));
+
+    console.log(scene.getViewportNodes());
+
     const programsDTO: IShaderProgramDTO[] = 
     [
         {
@@ -197,7 +204,7 @@ const main = () =>
     [
         2 / gl.canvas.width,                     0, 0,
                           0, -2 / gl.canvas.height, 0,
-                          -1,                    1, 1  
+                         -1,                     1, 1  
     ]);
 
 
@@ -210,24 +217,28 @@ const main = () =>
         
         (gl: WebGLRenderingContext, program: WebGLProgram, nodes: INode[]) => 
         {
-            const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
-            const vertexBuffer              = gl.createBuffer();
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nodes[0].getGeometry()), gl.STATIC_DRAW);
-
-            gl.enableVertexAttribArray(positionAttributeLocation);
-            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-
             const projectionMatrixUniform = gl.getUniformLocation(program, 'uMatP');
             const cameraMatrixUniform     = gl.getUniformLocation(program, 'uMatV');
             const localMatrixUniform      = gl.getUniformLocation(program, 'uMat');
             
+            const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
+            const vertexBuffer              = gl.createBuffer();
+            
             gl.uniformMatrix3fv(projectionMatrixUniform, false, projectionMatrix.elements);
             gl.uniformMatrix3fv(cameraMatrixUniform,     false, cameraMatrix.elements);
-            gl.uniformMatrix3fv(localMatrixUniform,      false, nodes[0].getLocalMatrix().elements);
             
-            gl.drawArrays(gl.TRIANGLES, 0, nodes[0].getGeometry().length / 2);
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+            for (let i = 0; i < nodes.length; i++)
+            {   
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nodes[i].getGeometry()), gl.STATIC_DRAW);
+                gl.uniformMatrix3fv(localMatrixUniform, false, new Matrix3x3().elements);
+                // gl.uniformMatrix3fv(localMatrixUniform, false, nodes[i].getLocalMatrix().elements);
+                
+                gl.drawArrays(gl.TRIANGLES, 0, nodes[i].getGeometry().length / 2);
+            }
         },
     ];
     
