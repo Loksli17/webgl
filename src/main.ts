@@ -305,8 +305,10 @@ const main = () =>
             [
                 50,  50,
                 100, 50,
-                100, 100,
                 50, 100,
+                50, 100,
+                100, 50,
+                100, 100,
             ],
 
             localMatrix: new Matrix3x3(),
@@ -358,12 +360,11 @@ const main = () =>
             gl.uniformMatrix3fv(cameraMatrixUniform,     false, cameraMatrix.elements);
             gl.uniformMatrix3fv(localMatrixUniform,      false, nodes[0].localMatrix.elements);
             
-            gl.drawArrays(gl.TRIANGLES, 0, 4);
+            gl.drawArrays(gl.TRIANGLES, 0, nodes[0].geometry.length / 2);
         },
     ];
     
     const programs = makeShaderPrograms(gl, programsDTO);
-
 
     const processRender = () => 
     {
