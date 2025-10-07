@@ -13,4 +13,5 @@
 .actions-div 
 {
     padding: 25px 30px;
+    border-left: 1px #ccc solid;
 }
