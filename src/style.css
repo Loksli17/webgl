@@ -10,8 +10,50 @@
     grid-template-columns: 1500px auto;
 }
 
-.actions-div 
+.right-sidebar
 {
-    padding: 25px 30px;
     border-left: 1px #ccc solid;
 }
+
+
+.right-sidebar > .texture-wrap
+{
+    display: grid;
+    gap: 20px;
+    padding: 25px 30px;
+    border-bottom: 1px #ccc solid;
+}
+
+
+.right-sidebar > .texture-wrap > button
+{
+    padding: 12px 18px;
+    background: rgb(90, 236, 255);
+    height: max-content;
+    font-size: 15px;
+    border: none;
+    width: max-content;
+    border-radius: 5px;
+}
+
+.right-sidebar > .texture-wrap > button:hover
+{
+    cursor: pointer;
+    transition: 0.15s;
+    background: rgb(166, 245, 255);
+}
+
+.right-sidebar > .texture-wrap > .index-wrap
+{
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 15px;
+    align-items: center;
+    font-size: 16px;
+}
+
+.right-sidebar > .texture-wrap > .index-wrap > input
+{
+    padding: 10px 15px;
+}
+
