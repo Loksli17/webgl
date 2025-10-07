@@ -10,10 +10,13 @@ import './style.css'
 
 
 const fragmentShaderSource: string = 
-`
+`precision mediump float;
+    
+    uniform vec4 uColor;
+
     void main(void)
     {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        gl_FragColor = uColor;
     }
 `;
 
@@ -167,6 +170,41 @@ const render = (
 
 
 
+const makeNodes = (scene: IScene) => 
+{
+    const nodesAmount = 100;
+
+    const size = 50;
+    const gap  = 50;
+    const maxX = 1400;
+
+    let x = size;
+    let y = size;
+
+    for (let i = 0; i < nodesAmount; i++)
+    {
+        scene.insertNode(
+            new Node(
+                new Vec2(size, size), 
+                new Vec2(x, y),
+                {r: Math.random(), g: Math.random(), b: Math.random(), a: 1},
+            )
+        );
+
+        console.log(scene.getViewportNodes()[scene.getViewportNodes().length - 1].getColor());
+
+        x += size + gap;
+        
+        if (maxX <= x)
+        {
+            y += size + gap;
+            x = size;
+        }
+    }
+}
+
+
+
 const main = () => 
 {    
     const canvas = document.querySelector('#canvas-gl') as HTMLCanvasElement;
@@ -181,14 +219,7 @@ const main = () =>
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
 
-    // scene.insertNode(new Node(new Vec2(250, 250), new Vec2(50, 50)));
-    // scene.insertNode(new Node(new Vec2(100, 400), new Vec2(1000, 100)));
-    // scene.insertNode(new Node(new Vec2(100, 100), new Vec2(100, 650)));
-    // scene.insertNode(new Node(new Vec2(100, 100), new Vec2(120, 750)));
-    // scene.insertNode(new Node(new Vec2(100, 100), new Vec2(100, 200)));
-    scene.insertNode(new Node(new Vec2(100, 100), new Vec2(100, 100)));
-
-    console.log(scene.getViewportNodes());
+    makeNodes(scene);
 
     const programsDTO: IShaderProgramDTO[] = 
     [
@@ -220,6 +251,7 @@ const main = () =>
             const projectionMatrixUniform = gl.getUniformLocation(program, 'uMatP');
             const cameraMatrixUniform     = gl.getUniformLocation(program, 'uMatV');
             const localMatrixUniform      = gl.getUniformLocation(program, 'uMat');
+            const colorUniform            = gl.getUniformLocation(program, 'uColor');
             
             const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
             const vertexBuffer              = gl.createBuffer();
@@ -234,8 +266,11 @@ const main = () =>
             for (let i = 0; i < nodes.length; i++)
             {   
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nodes[i].getGeometry()), gl.STATIC_DRAW);
+
                 gl.uniformMatrix3fv(localMatrixUniform, false, new Matrix3x3().elements);
-                // gl.uniformMatrix3fv(localMatrixUniform, false, nodes[i].getLocalMatrix().elements);
+                gl.uniformMatrix3fv(localMatrixUniform, false, nodes[i].getLocalMatrix().elements);
+
+                gl.uniform4f(colorUniform, nodes[i].getColor().r, nodes[i].getColor().g, nodes[i].getColor().b, nodes[i].getColor().a);
                 
                 gl.drawArrays(gl.TRIANGLES, 0, nodes[i].getGeometry().length / 2);
             }

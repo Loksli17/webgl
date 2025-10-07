@@ -7,9 +7,10 @@ import type IScene     from "./IScene";
 export default class Scene implements IScene
 {
 
-    private color: IRGBAColor = { r: 0, g: 0, b: 0, a: 1 };
+    private color: IRGBAColor = { r: 0.9, g: 0.9, b: 0.9, a: 1 };
     private nodes: INode[]    = [];
 
+    
     public setColor(color: IRGBAColor): void 
     {
         this.color = color

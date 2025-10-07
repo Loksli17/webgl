@@ -1,6 +1,7 @@
-import Matrix3x3  from "../../math/Matrix3x3";
-import Vec2       from "../../math/Vector2";
-import type INode from "./INode";
+import Matrix3x3       from "../../math/Matrix3x3";
+import Vec2            from "../../math/Vector2";
+import type IRGBAColor from "../color";
+import type INode      from "./INode";
 
 
 
@@ -10,17 +11,20 @@ export default class Node implements INode
     private localMatrix: Matrix3x3;
     private boundingBox: [Vec2, Vec2, Vec2, Vec2];
     
-    private size: Vec2;
+    private size : Vec2;
+    private color: IRGBAColor;
 
     
     constructor(
-        size: Vec2, 
-        pos : Vec2 = new Vec2(0, 0)
+        size : Vec2, 
+        pos  : Vec2 = new Vec2(0, 0),
+        color: IRGBAColor = {r: 0.4, g: 0.1, b: 1, a: 1},
     )
     {
         this.size        = new Vec2(size.x, size.y);
         this.localMatrix = new Matrix3x3();
         this.geometry    = [0, 0, 0, 0, 0, 0];
+        this.color       = color;
 
         this.localMatrix.elements[6] = pos.x;
         this.localMatrix.elements[7] = pos.y;
@@ -33,7 +37,7 @@ export default class Node implements INode
         ];
 
         this.updateBoundingBox(this.size, this.localMatrix);
-        this.updateGeometry(this.boundingBox);
+        this.updateGeometry(this.boundingBox, this.localMatrix);
     }
 
     
@@ -60,6 +64,11 @@ export default class Node implements INode
         return this;
     }
 
+    public getColor(): IRGBAColor
+    {
+        return this.color;
+    }
+
 
     public updateBoundingBox(size: Vec2, m: Matrix3x3): this
     {
@@ -72,27 +81,27 @@ export default class Node implements INode
     }
 
 
-    public updateGeometry(bb: Vec2[]): this 
+    public updateGeometry(bb: Vec2[], m: Matrix3x3): this 
     {        
         //todo calc without position
         
-        this.geometry[0] = bb[0].x;
-        this.geometry[1] = bb[0].y;
+        this.geometry[0] = bb[0].x - m.elements[6];
+        this.geometry[1] = bb[0].y - m.elements[7];
 
-        this.geometry[2] = bb[1].x;
-        this.geometry[3] = bb[1].y;
+        this.geometry[2] = bb[1].x - m.elements[6];
+        this.geometry[3] = bb[1].y - m.elements[7];
 
-        this.geometry[4] = bb[3].x;
-        this.geometry[5] = bb[3].y;
+        this.geometry[4] = bb[3].x - m.elements[6];
+        this.geometry[5] = bb[3].y - m.elements[7];
 
-        this.geometry[6] = bb[3].x;
-        this.geometry[7] = bb[3].y;
+        this.geometry[6] = bb[3].x - m.elements[6];
+        this.geometry[7] = bb[3].y - m.elements[7];
         
-        this.geometry[8] = bb[1].x;
-        this.geometry[9] = bb[1].y;
+        this.geometry[8] = bb[1].x - m.elements[6];
+        this.geometry[9] = bb[1].y - m.elements[7];
 
-        this.geometry[10] = bb[2].x;
-        this.geometry[11] = bb[2].y;
+        this.geometry[10] = bb[2].x - m.elements[6];
+        this.geometry[11] = bb[2].y - m.elements[7];
         
         return this;
     }
