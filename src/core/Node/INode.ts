@@ -13,6 +13,9 @@ export default interface INode
     setSize(size: Vec2): this;
 
     getColor(): IRGBAColor;
+
+    setTexture(img: HTMLImageElement): void;
+    getTexture()                     : HTMLImageElement | null;
     
     updateGeometry   (bb: Vec2[], m: Matrix3x3): this;
     updateBoundingBox(size: Vec2, m: Matrix3x3): this;

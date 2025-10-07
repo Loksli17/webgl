@@ -1,10 +1,11 @@
-import Engine from './core/Engine';
-import type INode from './core/Node/INode';
-import Node from './core/Node/Node';
+import Engine      from './core/Engine';
+import type INode  from './core/Node/INode';
+import Node        from './core/Node/Node';
 import type IScene from './core/Scene/IScene';
-import Scene from './core/Scene/Scene';
-import Matrix3x3 from './math/Matrix3x3';
-import Vec2 from './math/Vector2';
+import Scene       from './core/Scene/Scene';
+import Matrix3x3   from './math/Matrix3x3';
+import Vec2        from './math/Vector2';
+
 import './style.css'
 
 
@@ -191,8 +192,6 @@ const makeNodes = (scene: IScene) =>
             )
         );
 
-        console.log(scene.getViewportNodes()[scene.getViewportNodes().length - 1].getColor());
-
         x += size + gap;
         
         if (maxX <= x)
@@ -203,6 +202,28 @@ const makeNodes = (scene: IScene) =>
     }
 }
 
+
+
+const handleUITexture = (scene: IScene) => 
+{
+    const button = document.querySelector('#add-texture') as HTMLButtonElement;
+    const input  = document.querySelector('#node-texture-index') as HTMLInputElement;
+
+    if (!button || !input) return;
+
+    const image = new Image();
+    image.src = 'public/images/rukav.png';
+
+    //! not good variant, but....
+    image.addEventListener('load', () => 
+    {
+        button.addEventListener('click', () => 
+        {
+            const index = Number(input.value);
+            scene.getViewportNodes()[index].setTexture(image);
+        });
+    });
+}
 
 
 const main = () => 
@@ -220,6 +241,7 @@ const main = () =>
     Engine.Instance().insertScene(scene);
 
     makeNodes(scene);
+    handleUITexture(scene);
 
     const programsDTO: IShaderProgramDTO[] = 
     [

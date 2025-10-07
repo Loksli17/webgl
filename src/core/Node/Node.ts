@@ -11,8 +11,9 @@ export default class Node implements INode
     private localMatrix: Matrix3x3;
     private boundingBox: [Vec2, Vec2, Vec2, Vec2];
     
-    private size : Vec2;
-    private color: IRGBAColor;
+    private size   : Vec2;
+    private color  : IRGBAColor;
+    private texture: HTMLImageElement | null = null; 
 
     
     constructor(
@@ -40,7 +41,6 @@ export default class Node implements INode
         this.updateGeometry(this.boundingBox, this.localMatrix);
     }
 
-    
     public getSize(): Vec2 
     {
         return this.size;
@@ -105,5 +105,17 @@ export default class Node implements INode
         
         return this;
     }
-    
+
+
+    public setTexture(img: HTMLImageElement): void 
+    {
+        this.texture = img;
+    }
+
+
+    public getTexture(): HTMLImageElement | null
+    {
+        return this.texture;
+    }
+
 }
