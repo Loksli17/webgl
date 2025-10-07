@@ -1,12 +1,15 @@
-import Matrix3x3       from "../../math/Matrix3x3";
-import Vec2            from "../../math/Vector2";
-import type IRGBAColor from "../color";
-import type INode      from "./INode";
+import Matrix3x3          from "../../math/Matrix3x3";
+import Vec2               from "../../math/Vector2";
+import type IRGBAColor    from "../color";
+import type INode         from "./INode";
+import type { NODE_TYPE } from "./NodeType";
+
 
 
 
 export default class Node implements INode
 {    
+    
     private geometry   : number[];
     private localMatrix: Matrix3x3;
     private boundingBox: [Vec2, Vec2, Vec2, Vec2];
@@ -14,18 +17,22 @@ export default class Node implements INode
     private size   : Vec2;
     private color  : IRGBAColor;
     private texture: HTMLImageElement | null = null; 
+    private type   : NODE_TYPE;
 
     
+
     constructor(
         size : Vec2, 
         pos  : Vec2 = new Vec2(0, 0),
         color: IRGBAColor = {r: 0.4, g: 0.1, b: 1, a: 1},
+        type : NODE_TYPE = 'COLOR',
     )
     {
         this.size        = new Vec2(size.x, size.y);
         this.localMatrix = new Matrix3x3();
         this.geometry    = [0, 0, 0, 0, 0, 0];
         this.color       = color;
+        this.type        = type;
 
         this.localMatrix.elements[6] = pos.x;
         this.localMatrix.elements[7] = pos.y;
@@ -83,8 +90,6 @@ export default class Node implements INode
 
     public updateGeometry(bb: Vec2[], m: Matrix3x3): this 
     {        
-        //todo calc without position
-        
         this.geometry[0] = bb[0].x - m.elements[6];
         this.geometry[1] = bb[0].y - m.elements[7];
 
@@ -116,6 +121,19 @@ export default class Node implements INode
     public getTexture(): HTMLImageElement | null
     {
         return this.texture;
+    }
+
+
+    public getType(): NODE_TYPE
+    {
+        return this.type;
+    }
+
+
+    public setType(type: NODE_TYPE): this
+    {
+        this.type = type;
+        return this;
     }
 
 }

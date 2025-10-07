@@ -1,0 +1,1 @@
+export type NODE_TYPE = 'COLOR' | 'TEXTURE'; 

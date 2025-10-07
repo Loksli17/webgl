@@ -6,6 +6,9 @@ import Scene       from './core/Scene/Scene';
 import Matrix3x3   from './math/Matrix3x3';
 import Vec2        from './math/Vector2';
 
+
+import type { NODE_TYPE } from './core/Node/NodeType';
+
 import './style.css'
 
 
@@ -95,15 +98,23 @@ const makeShaderProgram = (gl: WebGLRenderingContext, vShader: WebGLShader, fSha
 
 interface IShaderProgramDTO
 {
-    name         : string;
+    name         : NODE_TYPE;
     vShaderSource: string;
     fShaderSource: string;
 }
 
 
-const makeShaderPrograms = (gl: WebGLRenderingContext, programsDTO: IShaderProgramDTO[]) => 
+interface ProgramProxy
 {
-    const programs: WebGLProgram[] = [];
+    program: WebGLProgram;
+    type   : NODE_TYPE;
+}
+
+
+
+const makeShaderPrograms = (gl: WebGLRenderingContext, programsDTO: IShaderProgramDTO[]): ProgramProxy[] => 
+{
+    const proxy : ProgramProxy[] = [];
     
     for (let i = 0; i < programsDTO.length; i++)
     {
@@ -131,10 +142,10 @@ const makeShaderPrograms = (gl: WebGLRenderingContext, programsDTO: IShaderProgr
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
-        programs.push(program);
+        proxy.push({program, type: programsDTO[i].name});
     }
 
-    return programs;
+    return proxy;
 }
 
 
@@ -155,7 +166,7 @@ const renderScene = (scene: IScene, gl: WebGLRenderingContext) =>
 const render = (
     scene    : IScene, 
     gl       : WebGLRenderingContext, 
-    programs : WebGLProgram[], 
+    programs : ProgramProxy[], 
     renderers: ((gl: WebGLRenderingContext, program: WebGLProgram, nodes: INode[]) => void)[]
 ) => 
 {
@@ -165,7 +176,7 @@ const render = (
 
     for (let i = 0; i < programs.length; i++)
     {
-        renderers[i](gl, programs[i], scene.getViewportNodes());
+        renderers[i](gl, programs[i].program, scene.getViewportNodes(programs[i].type));
     }
 }
 
@@ -220,7 +231,16 @@ const handleUITexture = (scene: IScene) =>
         button.addEventListener('click', () => 
         {
             const index = Number(input.value);
-            scene.getViewportNodes()[index].setTexture(image);
+            const node  = scene.getViewportNodes('COLOR')[index];
+
+            if (!node) return;
+
+            scene.removeNode(node);
+            
+            node.setTexture(image);
+            node.setType('TEXTURE');
+
+            scene.insertNode(node);
         });
     });
 }
@@ -246,7 +266,7 @@ const main = () =>
     const programsDTO: IShaderProgramDTO[] = 
     [
         {
-            name         : 'Graphics', 
+            name         : 'COLOR', 
             vShaderSource: simpleVertexShaderSource, 
             fShaderSource: fragmentShaderSource,
         },
