@@ -13,8 +13,8 @@ import { handleUITexture } from './ui';
 
 import colorVertexShaderSource     from './render/programs/colorProgram/vs.glsl?raw';
 import colorFragmentShaderSource   from './render/programs/colorProgram/fs.glsl?raw';
-import textureVertexShaderSource   from './render/programs/colorProgram/vs.glsl?raw';
-import textureFragmentShaderSource from './render/programs/colorProgram/fs.glsl?raw';
+import textureVertexShaderSource   from './render/programs/textureProgram/vs.glsl?raw';
+import textureFragmentShaderSource from './render/programs/textureProgram/fs.glsl?raw';
 
 
 

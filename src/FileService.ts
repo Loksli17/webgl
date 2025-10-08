@@ -4,7 +4,7 @@
 export default class FileService 
 {
     
-    private accept = ['image/jpg', 'image/jpeg', 'image/png', 'image/svg+xml'];
+    private accept = ['image/jpg', 'image/jpeg', 'image/png'];
 
 
     public getNameWithoutExtension(name = '') 
