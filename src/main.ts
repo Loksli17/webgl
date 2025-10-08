@@ -10,125 +10,14 @@ import Vec2        from './math/Vector2';
 import type { NODE_TYPE } from './core/Node/NodeType';
 
 import './style.css'
+import { handleUITexture } from './ui';
 
+import fragmentColorShaderSource from'./render/programs/colorProgram/fs.glsl?raw';
+import colorVertexShaderSource   from './render/programs/colorProgram/vs.glsl?raw';
 
-
-const fragmentColorShaderSource: string = 
-`precision mediump float;
-    
-    uniform vec4 uColor;
-
-    void main(void)
-    {
-        gl_FragColor = uColor;
-    }
-`;
-
-const colorVertexShaderSource: string = 
-`
-    attribute vec2 aPos;
-
-    uniform mat3 uMatP;
-    uniform mat3 uMatV;
-    uniform mat3 uMat;
-    
-    void main()
-    {
-        vec2 pos = (uMatP * uMatV * uMat * vec3(aPos, 1)).xy;
-        gl_Position = vec4(pos, 0, 1);
-    }
-`;
-
-
-
-
-
-const fragmentTextureShaderSource: string = 
-`precision mediump float;
-
-    varying vec2 vTexPos;
-
-    uniform sampler2D uTexture;
-
-    void main()
-    {
-        gl_FragColor = texture2D(uTexture, vTexPos);
-    }
-`;
-
-const textureVertexShaderSource: string = 
-`
-    attribute vec2 aPos;
-    attribute vec2 aTexPos;
-
-    uniform mat3 uMatP;
-    uniform mat3 uMatV;
-    uniform mat3 uMat;
-
-    varying vec2 vTexPos;
-    
-    void main()
-    {
-        vec2 pos = (uMatP * uMatV * uMat * vec3(aPos, 1)).xy;
-        gl_Position = vec4(pos, 0, 1);
-
-        vTexPos = aTexPos;
-    }
-`;
-
-
-/**
- * 
- * @param gl 
- * @param source 
- * @param type 
- * @returns 
- */
-const makeShader = (gl: WebGLRenderingContext, source: string, type: number): WebGLShader | null =>
-{
-    const shader: WebGLShader | null = gl.createShader(type);
-
-    if (!shader) return null;
-
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-    {
-        console.error(`Shader wasn't compile ${gl.getShaderInfoLog(shader)}`);
-        gl.deleteShader(shader);
-        return null;
-    }
-
-    return shader;
-}
-
-
-/**
- * 
- * @param gl 
- * @param vShader 
- * @param fShader 
- * @returns 
- */
-const makeShaderProgram = (gl: WebGLRenderingContext, vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null => 
-{
-    const program: WebGLProgram = gl.createProgram();
-    
-    gl.attachShader(program, vShader);
-    gl.attachShader(program, fShader);
-
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-    {
-        console.error(`Shader program has not been inited`);
-        gl.deleteProgram(program);
-        return null;
-    }
-
-    return program;
-}
+import fragmentTextureShaderSource from'./render/programs/textureProgram/fs.glsl?raw';
+import textureVertexShaderSource   from './render/programs/textureProgram/vs.glsl?raw';
+import { makeShader, makeShaderProgram } from './render/utils';
 
 
 
@@ -217,10 +106,8 @@ const render = (
 
 
 
-const makeNodes = (scene: IScene) => 
+const makeNodes = (scene: IScene, nodesAmount: number) => 
 {
-    const nodesAmount = 15;
-
     const size = 50;
     const gap  = 50;
     const maxX = 1400;
@@ -250,35 +137,7 @@ const makeNodes = (scene: IScene) =>
 
 
 
-const handleUITexture = (scene: IScene) => 
-{
-    const button = document.querySelector('#add-texture') as HTMLButtonElement;
-    const input  = document.querySelector('#node-texture-index') as HTMLInputElement;
 
-    if (!button || !input) return;
-
-    const image = new Image();
-    image.src = 'public/images/rukav.png';
-
-    //! not good variant, but....
-    image.addEventListener('load', () => 
-    {
-        button.addEventListener('click', () => 
-        {
-            const index = Number(input.value);
-            const node  = scene.getViewportNodes('COLOR')[index];
-
-            if (!node) return;
-
-            scene.removeNode(node);
-            
-            node.setTexture(image);
-            node.setType('TEXTURE');
-
-            scene.insertNode(node);
-        });
-    });
-}
 
 
 const main = () => 
@@ -295,7 +154,7 @@ const main = () =>
     const scene = new Scene()
     Engine.Instance().insertScene(scene);
 
-    makeNodes(scene);
+    makeNodes(scene, 50);
     handleUITexture(scene);
 
     const programsDTO: IShaderProgramDTO[] = 
