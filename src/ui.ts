@@ -1,4 +1,5 @@
 import type IScene from "./core/Scene/IScene";
+import FileService from "./FileService";
 
 
 
@@ -9,26 +10,22 @@ const handleUITexture = (scene: IScene) =>
 
     if (!button || !input) return;
 
-    const image = new Image();
-    image.src = 'public/images/rukav.png';
 
-    //! not good variant, but....
-    image.addEventListener('load', () => 
+    button.addEventListener('click', async () => 
     {
-        button.addEventListener('click', () => 
-        {
-            const index = Number(input.value);
-            const node  = scene.getViewportNodes('COLOR')[index];
+        const { image } = await (new FileService()).getFile(() => {});
+        
+        const index = Number(input.value);
+        const node  = scene.getViewportNodes('COLOR')[index];
 
-            if (!node) return;
+        if (!node) return;
 
-            scene.removeNode(node);
-            
-            node.setTexture(image);
-            node.setType('TEXTURE');
+        scene.removeNode(node);
+        
+        node.setTexture(image);
+        node.setType('TEXTURE');
 
-            scene.insertNode(node);
-        });
+        scene.insertNode(node);
     });
 }
 
