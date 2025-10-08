@@ -13,7 +13,7 @@ import './style.css'
 
 
 
-const fragmentShaderSource: string = 
+const fragmentColorShaderSource: string = 
 `precision mediump float;
     
     uniform vec4 uColor;
@@ -24,8 +24,7 @@ const fragmentShaderSource: string =
     }
 `;
 
-
-const simpleVertexShaderSource: string = 
+const colorVertexShaderSource: string = 
 `
     attribute vec2 aPos;
 
@@ -37,6 +36,43 @@ const simpleVertexShaderSource: string =
     {
         vec2 pos = (uMatP * uMatV * uMat * vec3(aPos, 1)).xy;
         gl_Position = vec4(pos, 0, 1);
+    }
+`;
+
+
+
+
+
+const fragmentTextureShaderSource: string = 
+`precision mediump float;
+
+    varying vec2 vTexPos;
+
+    uniform sampler2D uTexture;
+
+    void main()
+    {
+        gl_FragColor = texture2D(uTexture, vTexPos);
+    }
+`;
+
+const textureVertexShaderSource: string = 
+`
+    attribute vec2 aPos;
+    attribute vec2 aTexPos;
+
+    uniform mat3 uMatP;
+    uniform mat3 uMatV;
+    uniform mat3 uMat;
+
+    varying vec2 vTexPos;
+    
+    void main()
+    {
+        vec2 pos = (uMatP * uMatV * uMat * vec3(aPos, 1)).xy;
+        gl_Position = vec4(pos, 0, 1);
+
+        vTexPos = aTexPos;
     }
 `;
 
@@ -114,7 +150,7 @@ interface ProgramProxy
 
 const makeShaderPrograms = (gl: WebGLRenderingContext, programsDTO: IShaderProgramDTO[]): ProgramProxy[] => 
 {
-    const proxy : ProgramProxy[] = [];
+    const proxy: ProgramProxy[] = [];
     
     for (let i = 0; i < programsDTO.length; i++)
     {
@@ -136,8 +172,6 @@ const makeShaderPrograms = (gl: WebGLRenderingContext, programsDTO: IShaderProgr
         const program = makeShaderProgram(gl, vertexShader, fragmentShader);
 
         if (!program) return [];
-
-        gl.useProgram(program);
 
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
@@ -176,6 +210,7 @@ const render = (
 
     for (let i = 0; i < programs.length; i++)
     {
+        gl.useProgram(programs[i].program);
         renderers[i](gl, programs[i].program, scene.getViewportNodes(programs[i].type));
     }
 }
@@ -184,7 +219,7 @@ const render = (
 
 const makeNodes = (scene: IScene) => 
 {
-    const nodesAmount = 100;
+    const nodesAmount = 15;
 
     const size = 50;
     const gap  = 50;
@@ -267,8 +302,14 @@ const main = () =>
     [
         {
             name         : 'COLOR', 
-            vShaderSource: simpleVertexShaderSource, 
-            fShaderSource: fragmentShaderSource,
+            vShaderSource: colorVertexShaderSource, 
+            fShaderSource: fragmentColorShaderSource,
+        },
+
+        {
+            name         : 'TEXTURE', 
+            vShaderSource: textureVertexShaderSource, 
+            fShaderSource: fragmentTextureShaderSource,
         },
     ];
 
@@ -297,7 +338,37 @@ const main = () =>
             
             const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
             const vertexBuffer              = gl.createBuffer();
-            
+
+
+            // const texture     = gl.createTexture();
+            // const frameBuffer = gl.createFramebuffer();
+
+            // gl.bindTexture(gl.TEXTURE_2D, texture);
+            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+            // gl.texImage2D(
+            //     gl.TEXTURE_2D,
+            //     0,
+            //     gl.RGBA,
+            //     gl.canvas.width,
+            //     gl.canvas.height,
+            //     0,
+            //     gl.RGBA,
+            //     gl.UNSIGNED_BYTE,
+            //     null
+            // );
+
+            // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+            // gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+
+            // //геометрия вся херня
+            // //this.drawArrays
+
+            // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
             gl.uniformMatrix3fv(projectionMatrixUniform, false, projectionMatrix.elements);
             gl.uniformMatrix3fv(cameraMatrixUniform,     false, cameraMatrix.elements);
             
@@ -308,14 +379,67 @@ const main = () =>
             for (let i = 0; i < nodes.length; i++)
             {   
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nodes[i].getGeometry()), gl.STATIC_DRAW);
-
-                gl.uniformMatrix3fv(localMatrixUniform, false, new Matrix3x3().elements);
                 gl.uniformMatrix3fv(localMatrixUniform, false, nodes[i].getLocalMatrix().elements);
-
                 gl.uniform4f(colorUniform, nodes[i].getColor().r, nodes[i].getColor().g, nodes[i].getColor().b, nodes[i].getColor().a);
                 
                 gl.drawArrays(gl.TRIANGLES, 0, nodes[i].getGeometry().length / 2);
             }
+
+            //todo remove buffer
+        },
+
+        (gl: WebGLRenderingContext, program: WebGLProgram, nodes: INode[]) => 
+        {
+            const texture = gl.createTexture();
+
+            const projectionMatrixUniform = gl.getUniformLocation(program, 'uMatP');
+            const cameraMatrixUniform     = gl.getUniformLocation(program, 'uMatV');
+            const localMatrixUniform      = gl.getUniformLocation(program, 'uMat');
+            const textureLocation         = gl.getUniformLocation(program, 'uTexture');
+
+            const positionAttributeLocation = gl.getAttribLocation(program, "aPos");
+            const vertexBuffer              = gl.createBuffer();
+
+            const texPositionAttributeLocation = gl.getAttribLocation(program, "aTexPos");
+            const texVertexBuffer              = gl.createBuffer();
+
+            gl.uniformMatrix3fv(projectionMatrixUniform, false, projectionMatrix.elements);
+            gl.uniformMatrix3fv(cameraMatrixUniform,     false, cameraMatrix.elements);
+
+            for (let i = 0; i < nodes.length; i++)
+            {
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nodes[i].getGeometry()), gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, texVertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]), gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(texPositionAttributeLocation);
+                gl.vertexAttribPointer(texPositionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+                gl.uniformMatrix3fv(localMatrixUniform, false, nodes[i].getLocalMatrix().elements);
+
+                const image = nodes[i].getTexture();
+
+                if (image)
+                {
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+                    gl.uniform1i(textureLocation, 0);
+                }
+
+                gl.drawArrays(gl.TRIANGLES, 0, nodes[i].getGeometry().length / 2);
+            }
+
+            // gl.deleteBuffer(texVertexBuffer);
+            // gl.deleteBuffer(vertexBuffer);
+            gl.deleteTexture(texture);
         },
     ];
     
