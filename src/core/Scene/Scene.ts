@@ -1,3 +1,4 @@
+import Matrix3x3          from "../../math/Matrix3x3";
 import type IRGBAColor    from "../color";
 import type INode         from "../Node/INode";
 import type { NODE_TYPE } from "../Node/NodeType";
@@ -14,6 +15,27 @@ export default class Scene implements IScene
         ['COLOR',   []],
         ['TEXTURE', []],
     ]);
+
+    private projectionMatrix: Matrix3x3;
+    private cameraMatrix    : Matrix3x3;
+
+
+    /**
+     * 
+     * @param canvasW 
+     * @param canvasH 
+     */
+    constructor(canvasW: number, canvasH: number)
+    {
+        this.projectionMatrix = new Matrix3x3(
+        [
+            2 / canvasW,            0, 0,
+                      0, -2 / canvasH, 0,
+                     -1,            1, 1 
+        ]);
+        
+        this.cameraMatrix = new Matrix3x3();
+    }
 
     
     public setColor(color: IRGBAColor): void 
@@ -53,6 +75,18 @@ export default class Scene implements IScene
     public getViewportNodes(type: NODE_TYPE): INode[] 
     {
         return this.nodes.get(type) || [];
+    }
+
+
+    public getProjectionMatrix(): Matrix3x3 
+    {
+        return this.projectionMatrix;    
+    }
+
+
+    public getCameraMatrix(): Matrix3x3 
+    {
+        return this.cameraMatrix;    
     }
 
 }
