@@ -65,9 +65,12 @@ export default class Renderer<T, N>
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
         this.gl.clearColor(sceneColor.r, sceneColor.g, sceneColor.b, sceneColor.a);
+        
+        //* 3d z-coord
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT);
+        
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     }
 
 

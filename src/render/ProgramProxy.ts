@@ -16,7 +16,7 @@ export interface IProgramProxy<T, N>
     getGlProgram(): WebGLProgram;
     getType()     : T;
 
-    getRenderer(): IProgramRenderer<N>
+    getRenderer(): IProgramRenderer<N>;
 }
 
 

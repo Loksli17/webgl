@@ -31,14 +31,14 @@ export default class ColorProgramRenderer implements IProgramRenderer<Node>
         gl.uniformMatrix3fv(projectionMatrixUniform, false, scene.getProjectionMatrix().elements);
         gl.uniformMatrix3fv(cameraMatrixUniform,     false, scene.getCameraMatrix().elements);
         
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.enableVertexAttribArray(positionAttributeLocation);
-        gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-
         this.nodes = scene.getViewportNodes('COLOR');
 
         for (let i = 0; i < this.nodes.length; i++)
         {   
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+            
             gl.bufferData(
                 gl.ARRAY_BUFFER, 
                 new Float32Array(this.nodes[i].getGeometry()), 

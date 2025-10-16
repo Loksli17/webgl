@@ -4,6 +4,7 @@ import type INode         from "../Node/INode";
 import type { NODE_TYPE } from "../Node/NodeType";
 
 
+
 export default interface IScene
 {
     setColor(color: IRGBAColor): void;
